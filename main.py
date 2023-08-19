@@ -1,6 +1,7 @@
 import pygame
 import sys
 import random
+from buttons import Button
 
 class Player(pygame.sprite.Sprite):
     def __init__(self):
@@ -39,12 +40,7 @@ class Player(pygame.sprite.Sprite):
                     self.rect.x += self.speed
                     self.speed = 0
 
-        #Previous jumping mechanism
-        '''
-        elif keys[pygame.K_w]:
-            if self.rect.bottom == 380:
-                self.gravity = -20
-        '''
+
         #Stopping movement
         
     def world_boundaries(self):
@@ -130,7 +126,7 @@ def main():
         global horizontal_increment
         global verticle_increment
         
-        horizontal_increment += 2
+        horizontal_increment += 1
         verticle_increment += 1
 
     def reset_obstacle_increment():
@@ -141,12 +137,15 @@ def main():
         verticle_increment = 5
 
     def game_over():
+
+        pygame.time.set_timer(flying_obstacle_timer, 0)
+        pygame.time.set_timer(speed_increase_timer, 0)
             
         font = pygame.font.Font("Fonts\TarrgetAcademyItalic-qzmx.otf", 25)
         end_font = pygame.font.Font("Fonts\TarrgetAcademyItalic-qzmx.otf", 75)
 
         end_text = end_font.render(f'Game over!', True, pygame.Color("Black"))
-        end_text_rect = end_text.get_rect(center=(360, 240))
+        end_text_rect = end_text.get_rect(center=(360, 220))
         end_text_lower = font.render('Press enter to retry', True, pygame.Color("Black"))
         end_text_lower_rect = end_text_lower.get_rect(center=(360, 290))
 
@@ -159,7 +158,6 @@ def main():
         screen.blit(end_text_lower, end_text_lower_rect)
         screen.blit(score_message, score_message_rect)
 
-    
     #Initializing screen
     pygame.init()
     clock = pygame.time.Clock()
@@ -172,7 +170,8 @@ def main():
     ground = Ground()
     
     #Starting game
-    game_active = True
+    menu_active = True
+    game_active = False
 
     #Initilizing obstacle spawn
     obstacle_timer = pygame.USEREVENT + 1
@@ -188,7 +187,7 @@ def main():
     #Initilzing Score Varibles
     start_time = 0
     score = 0
-    
+
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -213,11 +212,18 @@ def main():
             if game_active == False:  
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
                     player.gravity = 0
+
+    
                     reset_obstacle_increment()
+                    print("Reset speed!")
+                    
                     obstacles.empty()
                     start_time = int(pygame.time.get_ticks() / 1000)
                     player.rect = player.image.get_rect(midbottom=(75, 380))
                     game_active = True
+
+                    pygame.time.set_timer(flying_obstacle_timer, 15000)
+                    pygame.time.set_timer(speed_increase_timer, 10000)
 
             #Allows obstacales being randomly generated
             if game_active and event.type == obstacle_timer:
@@ -260,6 +266,40 @@ def main():
             obstacles.draw(screen)
 
             screen.blit(ground.image, ground.rect)
+
+        elif menu_active:
+            
+            screen.fill(pygame.Color("Grey"))
+
+            screen.blit(ground.image, ground.rect)
+            
+            screen.blit(player.image, player.rect)
+
+            title_font = pygame.font.Font("Fonts\TarrgetAcademyItalic-qzmx.otf", 100)
+            menu_font = pygame.font.Font("Fonts\TarrgetAcademyItalic-qzmx.otf", 75)
+
+            title_text = title_font.render(f'U.R.G', True, pygame.Color("White"))
+            title_text_rect = title_text.get_rect(center=(360, 100))
+
+            menu_mouse_pos = pygame.mouse.get_pos()
+
+            play_button = Button(image=None, pos=(345,200), text_input="Play",font=menu_font,base_color="White",hovering_color="Gold")
+
+            for button in [play_button]:
+                button.changeColor(menu_mouse_pos)
+                button.update(screen)
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if play_button.checkForInput(menu_mouse_pos):
+                        print("Game started")
+                        menu_active = False
+                        game_active = True
+            
+            screen.blit(title_text,title_text_rect)
 
         else:
             game_over()
