@@ -1,7 +1,6 @@
 import pygame
 import sys
 import random
-from time import sleep
 
 class Player(pygame.sprite.Sprite):
     def __init__(self):
@@ -68,7 +67,10 @@ class Player(pygame.sprite.Sprite):
         self.movement()
         self.apply_gravity()
         self.world_boundaries()
-    
+
+horizontal_increment = 10 #Controls the speed at which ground obstacles move from right to left -- These are the defualts
+verticle_increment = 5 # Controls the speed at which the obstacle moves downwards  -- These are the defualts
+
 class Obstacle(pygame.sprite.Sprite):
     def __init__(self, obstacle_type):
         super().__init__()
@@ -85,10 +87,10 @@ class Obstacle(pygame.sprite.Sprite):
             self.rect = self.image.get_rect(topleft=(random.randint(810, 990), 330))
         
         self.image.fill(pygame.Color("Black"))
-        
+
     def update(self):
         
-        self.rect.x -= 10
+        self.rect.x -= horizontal_increment
         
 class FlyingObstacle(pygame.sprite.Sprite):
     def __init__(self):
@@ -96,20 +98,16 @@ class FlyingObstacle(pygame.sprite.Sprite):
         self.image = pygame.Surface((300, 50))
         self.image.fill(pygame.Color("Black"))  
         self.rect = self.image.get_rect(topleft=(random.choice([0,420]), -75))
-        self.increment = 2 # Controls the downward increment
-
+    
     def update(self):
+        self.rect.y += verticle_increment
 
-        self.rect.y += self.increment
-
-   
 class Ground(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
         self.image = pygame.Surface((720, 100))
         self.image.fill(pygame.Color("Black"))
         self.rect = self.image.get_rect(bottom=480)
-
 
 def main():
     
@@ -127,14 +125,48 @@ def main():
         pygame.draw.rect(screen,'White',score_rect,1,5)
         screen.blit(score_surface,score_rect)
         return current_time
+    
+    def increase_obstacle_increment():
+        global horizontal_increment
+        global verticle_increment
+        
+        horizontal_increment += 2
+        verticle_increment += 1
 
+    def reset_obstacle_increment():
+        global horizontal_increment
+        global verticle_increment
+        
+        horizontal_increment = 10
+        verticle_increment = 5
+
+    def game_over():
+            
+        font = pygame.font.Font("Fonts\TarrgetAcademyItalic-qzmx.otf", 25)
+        end_font = pygame.font.Font("Fonts\TarrgetAcademyItalic-qzmx.otf", 75)
+
+        end_text = end_font.render(f'Game over!', True, pygame.Color("Black"))
+        end_text_rect = end_text.get_rect(center=(360, 240))
+        end_text_lower = font.render('Press enter to retry', True, pygame.Color("Black"))
+        end_text_lower_rect = end_text_lower.get_rect(center=(360, 290))
+
+        score_message = font.render(f'Your score: {score}', True, pygame.Color("Grey"))
+        score_message_rect = score_message.get_rect(center=(360, 310))
+        
+        screen.fill((94, 129, 162))
+        
+        screen.blit(end_text, end_text_rect)
+        screen.blit(end_text_lower, end_text_lower_rect)
+        screen.blit(score_message, score_message_rect)
+
+    
     #Initializing screen
     pygame.init()
     clock = pygame.time.Clock()
     screen = pygame.display.set_mode((720, 480))
     pygame.display.set_caption("Untitled Runner Game")
 
-    #Initilizing Player, obstacle spawns and sap
+    #Initilizing player, obstacle spawns and ground
     player = Player()
     obstacles = pygame.sprite.Group()
     ground = Ground()
@@ -145,11 +177,15 @@ def main():
     #Initilizing obstacle spawn
     obstacle_timer = pygame.USEREVENT + 1
     pygame.time.set_timer(obstacle_timer, 900)
-
+    
+    #Initilizing flying obstacle spawn
     flying_obstacle_timer = pygame.USEREVENT + 2
     pygame.time.set_timer(flying_obstacle_timer, 15000)
 
-    #Initilzing obstacle spawn
+    speed_increase_timer = pygame.USEREVENT + 3
+    pygame.time.set_timer(speed_increase_timer, 10000)
+
+    #Initilzing Score Varibles
     start_time = 0
     score = 0
     
@@ -162,18 +198,28 @@ def main():
             #Seperate jumping mechanisim to allow movement whilst in air
             if game_active:
                 if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_UP or event.key == pygame.K_w:
+                    if event.key == pygame.K_w:
                         if player.rect.bottom == 380:
                             player.gravity = -20
+
+            #New mechanism to allow a 'stomping' motion
+            if game_active:
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_s:
+                        if player.rect.bottom <= 380:
+                            player.gravity = 20
             
+            #Restart on game over screen
             if game_active == False:  
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
-                    game_active = True
                     player.gravity = 0
+                    reset_obstacle_increment()
                     obstacles.empty()
                     start_time = int(pygame.time.get_ticks() / 1000)
                     player.rect = player.image.get_rect(midbottom=(75, 380))
+                    game_active = True
 
+            #Allows obstacales being randomly generated
             if game_active and event.type == obstacle_timer:
                 obstacle_choice = random.randint(1,3)
 
@@ -187,8 +233,14 @@ def main():
 
                 obstacles.add(Obstacle(obstacle_type))
 
+            #Allows flying obstacles to be randomly generated
             if game_active and event.type == flying_obstacle_timer:
                 obstacles.add(FlyingObstacle()) 
+
+            #Gradually speeding up the game
+            if game_active and event.type == speed_increase_timer:
+               print("Speeding up!")
+               increase_obstacle_increment()
 
         if game_active:
             player.update()
@@ -210,20 +262,8 @@ def main():
             screen.blit(ground.image, ground.rect)
 
         else:
-            sleep(1)
-            screen.fill((94, 129, 162))
-            end_font = pygame.font.Font("Fonts\TarrgetAcademyItalic-qzmx.otf", 75)
-            end_text = end_font.render(f'Game over!', True, pygame.Color("Black"))
-            end_text_rect = end_text.get_rect(center=(360, 240))
-            font = pygame.font.Font("Fonts\TarrgetAcademyItalic-qzmx.otf", 25)
-            end_text_lower = font.render('Press enter to retry', True, pygame.Color("Black"))
-            end_text_lower_rect = end_text_lower.get_rect(center=(360, 290))
-            score_message = font.render(f'Your score: {score}', True, pygame.Color("Grey"))
-            score_message_rect = score_message.get_rect(center=(360, 310))
-            screen.blit(end_text, end_text_rect)
-            screen.blit(end_text_lower, end_text_lower_rect)
-            screen.blit(score_message, score_message_rect)
-
+            game_over()
+        
         pygame.display.update()
         clock.tick(60)
 
