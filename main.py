@@ -127,7 +127,7 @@ def main():
         global verticle_increment
         
         horizontal_increment += 1
-        verticle_increment += 1
+        verticle_increment += 0.2
 
     def reset_obstacle_increment():
         global horizontal_increment
@@ -285,6 +285,8 @@ def main():
 
             play_button = Button(image=None, pos=(345,200), text_input="Play",font=menu_font,base_color="White",hovering_color="Gold")
 
+            screen.blit(title_text,title_text_rect)
+
             for button in [play_button]:
                 button.changeColor(menu_mouse_pos)
                 button.update(screen)
@@ -297,9 +299,11 @@ def main():
                     if play_button.checkForInput(menu_mouse_pos):
                         print("Game started")
                         menu_active = False
+                        start_time = 0
+                        score = 0
                         game_active = True
             
-            screen.blit(title_text,title_text_rect)
+            
 
         else:
             game_over()
