@@ -1,5 +1,5 @@
 # urg
-Untitled Platformer Game (U.G.R) is my first ever game. I used Pygame and took about a week of development due having to learn Pygame whilst making it. 
+Untitled Platformer Game (U.R.G) is my first ever game. I used Pygame and took about a week of development due having to learn Pygame whilst making it. 
 # Instructions
 1. Go to releases and download the source code.zip
 2. Extract the zip and ensure the dependancies are downloaded and the Audio and Video Folders are in place
