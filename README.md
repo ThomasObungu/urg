@@ -7,8 +7,7 @@ Untitled Platformer Game (U.G.R) is my first ever game. I used Pygame and took a
 #
 # Dependencies
 Python 3.8+
-
 pygane -> ``pip install pygame``
 # Gameplay
-https://github.com/Tawitg/urg/assets/108408219/4afa3163-e065-4094-b387-0815ed44b0d2
+https://github.com/Tawitg/urg/assets/108408219/4c1954e5-1412-4285-a06d-ae1215b89a1c
 
